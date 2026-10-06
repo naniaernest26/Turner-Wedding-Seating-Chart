@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Your Table</title>
+    <style>
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: #f4f6f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .card { background: #ffffff; padding: 30px 25px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); width: 100%; max-width: 420px; text-align: center; }
+        h1 { color: #1b365d; margin-bottom: 8px; font-size: 24px; }
+        p.subtitle { color: #666; font-size: 14px; margin-bottom: 24px; }
+        input { width: 100%; padding: 14px 16px; font-size: 16px; border: 2px solid #d3d3d3; border-radius: 10px; outline: none; transition: border-color 0.2s; }
+        input:focus { border-color: #1b365d; }
+        .results { margin-top: 20px; text-align: left; max-height: 250px; overflow-y: auto; }
+        .result-item { background: #e8eef5; padding: 14px 16px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .guest-name { font-weight: 600; color: #333; }
+        .table-badge { background: #1b365d; color: #fff; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; }
+        .no-match { color: #888; text-align: center; margin-top: 15px; font-size: 14px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Welcome!</h1>
+        <p class="subtitle">Type your name below to find your table assignment</p>
+        <input type="text" id="searchInput" placeholder="Type your name..." onkeyup="searchGuest()">
+        <div class="results" id="resultsContainer"></div>
+        <div class="no-match" id="noMatch">No guest found with that name.</div>
+    </div>
+
+    <script>
+        const guests = [
+            {"name": "Jartu Jallah", "table": "Table 1"}, {"name": "Grace Samah", "table": "Table 1"}, {"name": "Selina Gibson", "table": "Table 1"}, {"name": "George Gibson", "table": "Table 1"}, {"name": "Musu Yeannefehn", "table": "Table 1"}, {"name": "Nwosu, Musu Yeanafehn plus 1", "table": "Table 1"}, {"name": "Mary Zenneh", "table": "Table 1"}, {"name": "Lorraine Brumskine", "table": "Table 1"}, {"name": "Musu Demmah", "table": "Table 1"}, {"name": "Annie Saye", "table": "Table 1"},
+            {"name": "Angela Turner", "table": "Table 2"}, {"name": "Cecilia Turner", "table": "Table 2"}, {"name": "Hawa Turner", "table": "Table 2"}, {"name": "Ernest Turner III", "table": "Table 2"}, {"name": "Erwin Turner", "table": "Table 2"}, {"name": "Emerick Turner", "table": "Table 2"}, {"name": "Estina Sinna", "table": "Table 2"}, {"name": "Roland Teh", "table": "Table 2"}, {"name": "Patrick Goba", "table": "Table 2"}, {"name": "Patrick Goba plus 1", "table": "Table 2"},
+            {"name": "Florence Tokpa", "table": "Table 3"}, {"name": "William Tokpa", "table": "Table 3"}, {"name": "Blessing Jallah", "table": "Table 3"}, {"name": "Priscilla Gaye", "table": "Table 3"}, {"name": "Marvin Gaye", "table": "Table 3"}, {"name": "Kula Simpson", "table": "Table 3"}, {"name": "Watta Varney", "table": "Table 3"}, {"name": "Fedelis Akor", "table": "Table 3"}, {"name": "Carman Smith", "table": "Table 3"}, {"name": "Amie Vaye", "table": "Table 3"},
+            {"name": "Nyndan Sandy", "table": "Table 4"}, {"name": "Teredan Sia Vandi", "table": "Table 4"}, {"name": "Lucky Shango plus 1", "table": "Table 4"}, {"name": "Dominick Brapoh (Lucky Shango)*", "table": "Table 4"}, {"name": "Emmanuel Davies", "table": "Table 4"}, {"name": "Cathrine Davies", "table": "Table 4"}, {"name": "Comfort Kanu", "table": "Table 4"}, {"name": "Joseph Kanu", "table": "Table 4"}, {"name": "Margaret Togba", "table": "Table 4"}, {"name": "Bartee Togba", "table": "Table 4"},
+            {"name": "Zilabeteh J. Jallah", "table": "Table 5"}, {"name": "Sayzay Samah", "table": "Table 5"}, {"name": "Jennifer Samah", "table": "Table 5"}, {"name": "Larwuo Samah-Davis", "table": "Table 5"}, {"name": "Pastor Tokyo Davis", "table": "Table 5"}, {"name": "Jowo Weston-Samah", "table": "Table 5"}, {"name": "Samuel Moyallah jr.", "table": "Table 5"}, {"name": "Fatima Dumbuya", "table": "Table 5"}, {"name": "Lucy Manswell (Jen Plus 1)", "table": "Table 5"}, {"name": "Monica N. Paye", "table": "Table 5"},
+            {"name": "David Nweborne", "table": "Table 6"}, {"name": "Adeswua Egharevba", "table": "Table 6"}, {"name": "Jessyca Ibisanmi", "table": "Table 6"}, {"name": "Conroy Johnson", "table": "Table 6"}, {"name": "Mrs Salim Morency", "table": "Table 6"}, {"name": "Salim Morency", "table": "Table 6"}, {"name": "Vivian Lawson", "table": "Table 6"}, {"name": "Vivian Lawson Husband", "table": "Table 6"}, {"name": "Derrick Harris", "table": "Table 6"}, {"name": "Lisa Greene", "table": "Table 6"},
+            {"name": "Grace Smith & Brynn", "table": "Table 7"}, {"name": "Daniel Smith", "table": "Table 7"}, {"name": "Annabel Gaye", "table": "Table 7"}, {"name": "Scott Burgdorf", "table": "Table 7"}, {"name": "Diamond Saydee", "table": "Table 7"}, {"name": "Celou Yeanafehn", "table": "Table 7"}, {"name": "Darius Samah", "table": "Table 7"}, {"name": "Kpalaga Jallah", "table": "Table 7"}, {"name": "Jude Smith", "table": "Table 7"}, {"name": "Darius Kollie", "table": "Table 7"}, {"name": "Gabriel Saydee", "table": "Table 7"},
+            {"name": "Teddy Yallah", "table": "Table 8"}, {"name": "Nikki Yallah", "table": "Table 8"}, {"name": "Evelyn Tamba", "table": "Table 8"}, {"name": "Joseph Tamba", "table": "Table 8"}, {"name": "Lesa Bropleh", "table": "Table 8"}, {"name": "Jeremiah Bropleh", "table": "Table 8"}, {"name": "Winifred Israel", "table": "Table 8"}, {"name": "Michaiah Israel", "table": "Table 8"}, {"name": "Dimitri King", "table": "Table 8"}, {"name": "Siatta King", "table": "Table 8"},
+            {"name": "John J.K. Saydee", "table": "Table 9"}, {"name": "Byron Saydee", "table": "Table 9"}, {"name": "Mariam Conde", "table": "Table 9"}, {"name": "Nadia Samah", "table": "Table 9"}, {"name": "Mclyn Cephus", "table": "Table 9"}, {"name": "Beyan Samah", "table": "Table 9"}, {"name": "Harriett Gaye", "table": "Table 9"}, {"name": "Stacy Greene", "table": "Table 9"}, {"name": "Nadia Greene", "table": "Table 9"}, {"name": "Gabriel Saydee", "table": "Table 9"},
+            {"name": "Jarrell Al Dennis", "table": "Table 10"}, {"name": "Janaj Dennis", "table": "Table 10"}, {"name": "Sharin Jallah", "table": "Table 10"}, {"name": "Nadine Jallah", "table": "Table 10"}, {"name": "Neena Samah", "table": "Table 10"}, {"name": "Marvin Gaye jr", "table": "Table 10"}, {"name": "Jayvin Ogunlana", "table": "Table 10"}, {"name": "Kelsey Davis", "table": "Table 10"}, {"name": "Payton Weston", "table": "Table 10"}, {"name": "Trinity Davis", "table": "Table 10"},
+            {"name": "Jami Parker", "table": "Table 11"}, {"name": "Freo Lynn", "table": "Table 11"}, {"name": "Adison Duggan", "table": "Table 11"}, {"name": "Sackor Zahnee", "table": "Table 11"}, {"name": "Edward Jallah", "table": "Table 11"}, {"name": "Levi Demmah", "table": "Table 11"}, {"name": "Ernest Kpan", "table": "Table 11"}, {"name": "Genora Smith", "table": "Table 11"}, {"name": "Wakred Tito", "table": "Table 11"}, {"name": "Karen Tito", "table": "Table 11"},
+            {"name": "Derrick Godboldo", "table": "Table 12"}, {"name": "Shavaughn Swain", "table": "Table 12"}, {"name": "Mr. Swain", "table": "Table 12"}, {"name": "Kaylen Swain", "table": "Table 12"}, {"name": "Lawrence Cassell", "table": "Table 12"}, {"name": "Sienneh S. Kollie", "table": "Table 12"}, {"name": "Vevian Brown", "table": "Table 12"}, {"name": "George Brown", "table": "Table 12"}, {"name": "Siata Dunn", "table": "Table 12"}, {"name": "Baxter Barber", "table": "Table 12"}, {"name": "Mrs Baxter Barber", "table": "Table 12"},
+            {"name": "Robertha Dennis", "table": "Table 13"}, {"name": "Rana Walters", "table": "Table 13"}, {"name": "Shirley Crawford", "table": "Table 13"}, {"name": "Yassah Gabriel", "table": "Table 13"}, {"name": "Elveria Major", "table": "Table 13"}, {"name": "Precious Gueateh", "table": "Table 13"}, {"name": "Mabel N. Sungbeh", "table": "Table 13"}, {"name": "Cecilia T. Sheriff", "table": "Table 13"}, {"name": "Alnetria Johnson", "table": "Table 13"}, {"name": "Martha Tumbay", "table": "Table 13"},
+            {"name": "Maliaka Major", "table": "Table 14"}, {"name": "Favor Tuku Duoe", "table": "Table 14"}, {"name": "Thomas Duoe", "table": "Table 14"}, {"name": "Victoria Pittman", "table": "Table 14"}, {"name": "Famatta Kawah", "table": "Table 14"}, {"name": "Bunchie Mulbah", "table": "Table 14"}, {"name": "Emmanuel Sackor", "table": "Table 14"}, {"name": "Kenneth Sompon", "table": "Table 14"}, {"name": "Roseline Kolison", "table": "Table 14"}, {"name": "Williett Demmah", "table": "Table 14"},
+            {"name": "Mylidee Harris", "table": "Table 15"}, {"name": "Mrs Mylidee Harris", "table": "Table 15"}, {"name": "Kloteh Somah", "table": "Table 15"}, {"name": "Mrs.Kloteh Somah", "table": "Table 15"}, {"name": "Belloh Julius", "table": "Table 15"}, {"name": "Adama Passaway", "table": "Table 15"}, {"name": "Amos Toe", "table": "Table 15"}, {"name": "Barwrue T. Johnson", "table": "Table 15"}, {"name": "Eddy Remy", "table": "Table 15"}, {"name": "Eddy Remy plus 1", "table": "Table 15"},
+            {"name": "Allen Kolison", "table": "Table 16"}, {"name": "Michelle Kolison", "table": "Table 16"}, {"name": "Issac Mitchell", "table": "Table 16"}, {"name": "Kou Mitchell", "table": "Table 16"}, {"name": "Peter Ashar", "table": "Table 16"}, {"name": "Joy Oghogho Oporiopo", "table": "Table 16"}, {"name": "Henrietta Salifu", "table": "Table 16"}, {"name": "Tumbay Stephens", "table": "Table 16"}, {"name": "Nii Aryeetey", "table": "Table 16"}, {"name": "Queen Garguah", "table": "Table 16"}, {"name": "Robert Garguah Jr", "table": "Table 16"},
+            {"name": "Amanda Mensah", "table": "Table 17"}, {"name": "Emmanuel Cheney", "table": "Table 17"}, {"name": "Sarah Olawumi", "table": "Table 17"}, {"name": "Tina Ibisanmi", "table": "Table 17"}, {"name": "Rama", "table": "Table 17"}, {"name": "Aissatou Diallo", "table": "Table 17"}, {"name": "Adja Camara", "table": "Table 17"}, {"name": "Michael Walker", "table": "Table 17"}, {"name": "Fefe Walker", "table": "Table 17"}, {"name": "Bosede Olwaumi", "table": "Table 17"}, {"name": "Bosede Guest Buckie", "table": "Table 17"},
+            {"name": "Sharyn Valentine", "table": "Table 18"}, {"name": "Sharyn's plus one", "table": "Table 18"}, {"name": "Titan Hughes", "table": "Table 18"}, {"name": "Maima Gibson", "table": "Table 18"}, {"name": "Robert Garguah Sr.", "table": "Table 18"}, {"name": "Mrs Robert Garguah sr.", "table": "Table 18"}, {"name": "Chanetta Yampu Dweh", "table": "Table 18"}, {"name": "James Dweh", "table": "Table 18"}, {"name": "Godfrey Ashcroft", "table": "Table 18"}, {"name": "Famata Ashcroft", "table": "Table 18"},
+            {"name": "Mariam Kenoka", "table": "Table 19"}, {"name": "Jaiye Awoyemi", "table": "Table 19"}, {"name": "Alicia Williams", "table": "Table 19"}, {"name": "Leoni Williams", "table": "Table 19"}, {"name": "Paymah Lloyd", "table": "Table 19"}, {"name": "Roslyn Hawa Gray", "table": "Table 19"}, {"name": "Henerita Zinnah", "table": "Table 19"}, {"name": "Samuelia Dunn", "table": "Table 19"}, {"name": "Mamia Brooks", "table": "Table 19"}, {"name": "Jennifer Williams", "table": "Table 19"}
+        ];
+
+        function searchGuest() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const container = document.getElementById('resultsContainer');
+            const noMatch = document.getElementById('noMatch');
+            container.innerHTML = '';
+            
+            if (query === '') {
+                noMatch.style.display = 'none';
+                return;
+            }
+
+            const matches = guests.filter(g => g.name.toLowerCase().includes(query));
+
+            if (matches.length === 0) {
+                noMatch.style.display = 'block';
+            } else {
+                noMatch.style.display = 'none';
+                matches.forEach(g => {
+                    const item = document.createElement('div');
+                    item.className = 'result-item';
+                    item.innerHTML = `<span class="guest-name">${g.name}</span><span class="table-badge">${g.table}</span>`;
+                    container.appendChild(item);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
